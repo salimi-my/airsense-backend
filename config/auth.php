@@ -1,7 +1,5 @@
 <?php
 
-use App\Models\User;
-
 return [
 
     /*
@@ -64,7 +62,7 @@ return [
     'providers' => [
         'users' => [
             'driver' => 'eloquent',
-            'model' => env('AUTH_MODEL', User::class),
+            'model' => env('AUTH_MODEL', App\Models\User::class),
         ],
 
         // 'users' => [
@@ -113,5 +111,61 @@ return [
     */
 
     'password_timeout' => env('AUTH_PASSWORD_TIMEOUT', 10800),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Email Change Alert Delay
+    |--------------------------------------------------------------------------
+    |
+    | This value determines the delay in seconds before sending an email
+    | change alert notification to the old email address. This provides
+    | a small buffer to prevent immediate notification delivery.
+    |
+    */
+
+    'email_change_alert_delay' => (int) env('EMAIL_CHANGE_ALERT_DELAY', 60),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Email Verification
+    |--------------------------------------------------------------------------
+    |
+    | Here you may specify the number of minutes before an email verification
+    | link expires. By default, the verification link will expire after 60
+    | minutes.
+    |
+    */
+
+    'verification' => [
+        'expire' => (int) env('VERIFICATION_EXPIRE_MINUTES', 60),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Registration Status
+    |--------------------------------------------------------------------------
+    |
+    | This option controls whether user registration is enabled in your
+    | application. When set to false, registration endpoints will return
+    | a 403 Forbidden response. This is useful for applications where
+    | you want to disable public registration.
+    |
+    */
+
+    'registration_enabled' => env('REGISTRATION_ENABLED', true),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Social Authentication Status
+    |--------------------------------------------------------------------------
+    |
+    | This option controls whether social authentication (OAuth) is enabled
+    | in your application. When set to false, social auth endpoints will
+    | return a 403 Forbidden response. This is useful for applications where
+    | you want to disable OAuth login methods.
+    |
+    */
+
+    'social_auth_enabled' => env('SOCIAL_AUTH_ENABLED', true),
 
 ];

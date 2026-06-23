@@ -1,0 +1,76 @@
+---
+description: Repository pattern conventions for controllers, repositories, and API responses
+globs: app/Http/Controllers/**/*.php,app/Repositories/**/*.php
+alwaysApply: false
+---
+
+# Repository Pattern
+
+This project uses the Repository Pattern to decouple data access from controllers.
+
+## Structure
+
+- `app/Repositories/BaseRepository.php` — abstract base with `all()`, `find()`, `create()`, `update()`, `delete()`, `paginate()`, `allQuery()`, `allQueryLike()`
+- `app/Repositories/{Model}Repository.php` — extends `BaseRepository`, implements `model()` and `getFieldsSearchable()`
+- `app/Http/Controllers/AppBaseController.php` — base controller with `sendResponse()`, `sendError()`, `sendSuccess()`
+- `app/Http/Controllers/API/{Model}APIController.php` — injects repository via constructor, uses `AppBaseController` responses
+
+## Creating a New Repository
+
+```php
+// app/Repositories/PostRepository.php
+namespace App\Repositories;
+
+use App\Models\Post;
+
+class PostRepository extends BaseRepository
+{
+    protected $fieldSearchable = ['title', 'status'];
+
+    public function getFieldsSearchable(): array
+    {
+        return $this->fieldSearchable;
+    }
+
+    public function model(): string
+    {
+        return Post::class;
+    }
+}
+```
+
+## Creating a New API Controller
+
+```php
+// app/Http/Controllers/API/PostAPIController.php
+namespace App\Http\Controllers\API;
+
+use App\Http\Controllers\AppBaseController;
+use App\Repositories\PostRepository;
+use Illuminate\Http\JsonResponse;
+
+class PostAPIController extends AppBaseController
+{
+    public function __construct(private PostRepository $postRepository) {}
+
+    public function show(int $id): JsonResponse
+    {
+        $post = $this->postRepository->find($id);
+
+        if (!$post) {
+            return $this->sendError('Post not found.', 404);
+        }
+
+        return $this->sendResponse($post, 'Post retrieved successfully');
+    }
+}
+```
+
+## Rules
+
+- **Never query Eloquent models directly in controllers.** All DB access goes through the repository.
+- **Always inject the repository** via the constructor using constructor property promotion.
+- **Use `sendResponse()`, `sendError()`, `sendSuccess()`** from `AppBaseController` — never return `response()->json()` directly in API controllers.
+- **Put business logic in the repository**, not the controller. Controllers handle HTTP concerns only (auth, request parsing, response formatting).
+- **Add custom query methods to the specific repository**, not to the controller or model.
+- **Searchable fields** are declared in `$fieldSearchable` and returned by `getFieldsSearchable()`.

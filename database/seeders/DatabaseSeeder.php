@@ -17,6 +17,8 @@ class DatabaseSeeder extends Seeder
     {
         // Run the role seeder first
         $this->call(RoleSeeder::class);
+        $this->call(StationSeeder::class);
+        $this->call(ReadingHistoricalSeeder::class);
 
         // Get role IDs
         $adminRole = Role::where('name', 'admin')->first();

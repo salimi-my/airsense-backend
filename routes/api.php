@@ -116,4 +116,19 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
 
     // Role API resource
     Route::apiResource('/roles', RoleAPIController::class);
+
+    // AirSense — air quality & risk assessment
+    Route::get('/dashboard', [\App\Http\Controllers\API\DashboardController::class, 'index']);
+    Route::get('/me/assessments', [\App\Http\Controllers\API\MeAssessmentController::class, 'index']);
+    Route::get('/stations', [\App\Http\Controllers\API\StationController::class, 'index']);
+    Route::get('/stations/alerts', [\App\Http\Controllers\API\StationController::class, 'alerts']);
+    Route::get('/stations/nearby', [\App\Http\Controllers\API\StationController::class, 'nearby']);
+    Route::get('/stations/{id}', [\App\Http\Controllers\API\StationController::class, 'show']);
+    Route::get('/stations/{id}/readings', [\App\Http\Controllers\API\StationController::class, 'readings']);
+    Route::get('/stations/{id}/prediction', [\App\Http\Controllers\API\RiskAssessmentController::class, 'predict']);
+    Route::post('/assessments', [\App\Http\Controllers\API\RiskAssessmentController::class, 'assess']);
+
+    // AirSense — admin logs
+    Route::get('/admin/readings', [\App\Http\Controllers\API\AdminLogController::class, 'readings']);
+    Route::get('/admin/assessments', [\App\Http\Controllers\API\AdminLogController::class, 'assessments']);
 });

@@ -33,6 +33,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'gender',
         'password',
         'role_id',
+        'preferred_station_id',
         'two_factor_enabled',
         'avatar',
         'pending_email',
@@ -119,6 +120,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'gender' => 'nullable|in:male,female,other',
         'password' => 'nullable|string|min:8|max:255',
         'role_id' => 'required|exists:roles,id',
+        'preferred_station_id' => 'nullable|exists:stations,id',
     ];
 
     /**
@@ -369,6 +371,14 @@ class User extends Authenticatable implements MustVerifyEmail
     public function role(): BelongsTo
     {
         return $this->belongsTo(Role::class);
+    }
+
+    /**
+     * Get the user's preferred air quality monitoring station.
+     */
+    public function preferredStation(): BelongsTo
+    {
+        return $this->belongsTo(Station::class, 'preferred_station_id');
     }
 
     /**

@@ -132,7 +132,7 @@ class UserAPIController extends AppBaseController
         $this->authorize('update', $user);
 
         // Prepare update data (email changes now require separate verification)
-        $data = $request->only(['name', 'phone', 'gender']);
+        $data = $request->only(['name', 'phone', 'gender', 'preferred_station_id']);
 
         // Update user
         $this->userRepository->update($data, $user->id);
@@ -291,7 +291,7 @@ class UserAPIController extends AppBaseController
         }
 
         // Load related data
-        $user->load('role');
+        $user->load(['role', 'preferredStation:id,name,city']);
 
         return $this->sendResponse($user, 'Current user retrieved successfully');
     }

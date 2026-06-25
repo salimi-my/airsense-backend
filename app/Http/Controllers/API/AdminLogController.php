@@ -21,7 +21,8 @@ class AdminLogController extends AppBaseController
 
         $readings = Reading::query()
             ->with('station:id,name,city')
-            ->latest('fetched_at')
+            ->orderByDesc('created_at')
+            ->orderByDesc('fetched_at')
             ->paginate($perPage);
 
         return $this->sendResponse($readings, 'Readings log retrieved successfully');

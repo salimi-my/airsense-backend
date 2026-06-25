@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\AppBaseController;
+use App\Models\Reading;
 use App\Models\Station;
 use App\Support\AQIHelper;
 use App\Support\GeoHelper;
@@ -21,6 +22,11 @@ class StationController extends AppBaseController
             ->map(fn (Station $station) => $this->formatStation($station));
 
         $lastUpdated = $stations
+            ->pluck('latest_reading.created_at')
+            ->filter()
+            ->max();
+
+        $latestObservation = $stations
             ->pluck('latest_reading.fetched_at')
             ->filter()
             ->max();
@@ -28,7 +34,7 @@ class StationController extends AppBaseController
         return $this->sendResponse([
             'stations' => $stations,
             'last_updated' => $lastUpdated,
-            'stale' => AQIHelper::isStale($lastUpdated ? \Carbon\Carbon::parse($lastUpdated) : null, config('airsense.stale_reading_hours', 2)),
+            'stale' => AQIHelper::isStale($latestObservation ? \Carbon\Carbon::parse($latestObservation) : null, config('airsense.stale_reading_hours', 2)),
         ], 'Stations retrieved successfully');
     }
 
@@ -59,11 +65,12 @@ class StationController extends AppBaseController
 
         $days = min((int) $request->query('days', 7), 7);
 
-        $readings = $station->readings()
-            ->where('fetched_at', '>=', now()->subDays($days))
-            ->orderBy('fetched_at')
-            ->get()
-            ->map(fn ($reading) => [
+        $readings = Reading::dedupeByFetchedAt(
+            $station->readings()
+                ->where('fetched_at', '>=', now()->subDays($days))
+                ->latestFirst()
+                ->get()
+        )->map(fn ($reading) => [
                 'id' => $reading->id,
                 'aqi' => $reading->aqi,
                 'pm25' => $reading->pm25,
@@ -172,6 +179,7 @@ class StationController extends AppBaseController
                 'humidity' => $reading->humidity,
                 'wind_speed' => $reading->wind_speed,
                 'fetched_at' => $reading->fetched_at?->toISOString(),
+                'created_at' => $reading->created_at?->toISOString(),
                 'category' => AQIHelper::getCategory($aqi),
                 'color_class' => AQIHelper::getColorClass($aqi),
                 'hex_color' => AQIHelper::getHexColor($aqi),

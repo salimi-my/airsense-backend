@@ -85,7 +85,7 @@ class DashboardController extends AppBaseController
                 })
                 ->count();
 
-            $lastFetch = Reading::query()->max('fetched_at');
+            $lastFetch = Reading::query()->max('created_at');
 
             $data['admin'] = [
                 'assessments_today' => Assessment::query()
@@ -127,6 +127,7 @@ class DashboardController extends AppBaseController
                 'humidity' => $reading->humidity,
                 'wind_speed' => $reading->wind_speed,
                 'fetched_at' => $reading->fetched_at?->toISOString(),
+                'created_at' => $reading->created_at?->toISOString(),
                 'category' => AQIHelper::getCategory($aqi),
                 'color_class' => AQIHelper::getColorClass($aqi),
                 'hex_color' => AQIHelper::getHexColor($aqi),

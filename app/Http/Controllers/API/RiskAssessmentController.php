@@ -5,6 +5,7 @@ namespace App\Http\Controllers\API;
 use App\Http\Controllers\AppBaseController;
 use App\Http\Requests\StoreAssessmentRequest;
 use App\Models\Assessment;
+use App\Models\Reading;
 use App\Models\Station;
 use App\Services\AIRiskService;
 use Illuminate\Http\JsonResponse;
@@ -80,10 +81,9 @@ class RiskAssessmentController extends AppBaseController
             return $this->sendError('Station not found', 404);
         }
 
-        $readings = $station->readings()
-            ->orderBy('fetched_at')
-            ->get()
-            ->map(fn ($reading) => [
+        $readings = Reading::dedupeByFetchedAt(
+            $station->readings()->latestFirst()->get()
+        )->map(fn ($reading) => [
                 'aqi' => $reading->aqi,
                 'pm25' => $reading->pm25,
                 'pm10' => $reading->pm10,

@@ -33,7 +33,8 @@ class Station extends Model
 
     public function latestReading(): HasOne
     {
-        return $this->hasOne(Reading::class)->latestOfMany('fetched_at');
+        // Highest id per station matches latest created_at → fetched_at for insert-only ingestion.
+        return $this->hasOne(Reading::class)->ofMany('id', 'max');
     }
 
     public function assessments(): HasMany

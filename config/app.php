@@ -123,4 +123,22 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Deployment Webhook
+    |--------------------------------------------------------------------------
+    |
+    | These configuration options control the deployment webhook notifications.
+    | The deployment token is used to authenticate incoming webhook requests.
+    | Generate with: openssl rand -hex 32
+    | The notification emails receive deployment status notifications.
+    |
+    */
+
+    'deployment_token' => env('DEPLOYMENT_TOKEN', 'your-secret-token-here'),
+
+    'deployment_notification_emails' => array_filter(
+        array_map('trim', explode(',', env('DEPLOYMENT_NOTIFICATION_EMAILS', '')))
+    ),
+
 ];

@@ -19,6 +19,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'verified' => \App\Http\Middleware\EnsureEmailIsVerified::class,
             'registration.enabled' => \App\Http\Middleware\EnsureRegistrationIsEnabled::class,
+            'deployment.token' => \App\Http\Middleware\ValidateDeploymentToken::class,
         ]);
 
         // Use web middleware group and replace PreventRequestForgery with our custom middleware

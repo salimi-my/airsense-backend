@@ -1,16 +1,31 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\API\UserAPIController;
+use App\Http\Controllers\API\AdminLogController;
+use App\Http\Controllers\API\DashboardController;
+use App\Http\Controllers\API\DeploymentWebhookController;
+use App\Http\Controllers\API\MeAssessmentController;
+use App\Http\Controllers\API\RiskAssessmentController;
 use App\Http\Controllers\API\RoleAPIController;
-use App\Http\Controllers\Auth\SocialAuthController;
-use App\Http\Controllers\Auth\NewPasswordController;
-use App\Http\Controllers\Auth\VerifyEmailController;
-use App\Http\Controllers\Auth\TwoFactorAuthController;
-use App\Http\Controllers\Auth\RegisteredUserController;
-use App\Http\Controllers\Auth\PasswordResetLinkController;
+use App\Http\Controllers\API\StationController;
+use App\Http\Controllers\API\UserAPIController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\EmailVerificationNotificationController;
+use App\Http\Controllers\Auth\NewPasswordController;
+use App\Http\Controllers\Auth\PasswordResetLinkController;
+use App\Http\Controllers\Auth\RegisteredUserController;
+use App\Http\Controllers\Auth\SocialAuthController;
+use App\Http\Controllers\Auth\TwoFactorAuthController;
+use App\Http\Controllers\Auth\VerifyEmailController;
+use Illuminate\Support\Facades\Route;
+use Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful;
+
+// Deployment webhook (stateless, no sessions needed)
+Route::post('/deployment-webhook', [DeploymentWebhookController::class, 'handle'])
+    ->middleware('deployment.token')
+    ->withoutMiddleware([
+        EnsureFrontendRequestsAreStateful::class,
+    ])
+    ->name('api.deployment.webhook');
 
 // Guest routes
 Route::middleware('guest')->group(function () {
@@ -118,17 +133,17 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
     Route::apiResource('/roles', RoleAPIController::class);
 
     // AirSense — air quality & risk assessment
-    Route::get('/dashboard', [\App\Http\Controllers\API\DashboardController::class, 'index']);
-    Route::get('/me/assessments', [\App\Http\Controllers\API\MeAssessmentController::class, 'index']);
-    Route::get('/stations', [\App\Http\Controllers\API\StationController::class, 'index']);
-    Route::get('/stations/alerts', [\App\Http\Controllers\API\StationController::class, 'alerts']);
-    Route::get('/stations/nearby', [\App\Http\Controllers\API\StationController::class, 'nearby']);
-    Route::get('/stations/{id}', [\App\Http\Controllers\API\StationController::class, 'show']);
-    Route::get('/stations/{id}/readings', [\App\Http\Controllers\API\StationController::class, 'readings']);
-    Route::get('/stations/{id}/prediction', [\App\Http\Controllers\API\RiskAssessmentController::class, 'predict']);
-    Route::post('/assessments', [\App\Http\Controllers\API\RiskAssessmentController::class, 'assess']);
+    Route::get('/dashboard', [DashboardController::class, 'index']);
+    Route::get('/me/assessments', [MeAssessmentController::class, 'index']);
+    Route::get('/stations', [StationController::class, 'index']);
+    Route::get('/stations/alerts', [StationController::class, 'alerts']);
+    Route::get('/stations/nearby', [StationController::class, 'nearby']);
+    Route::get('/stations/{id}', [StationController::class, 'show']);
+    Route::get('/stations/{id}/readings', [StationController::class, 'readings']);
+    Route::get('/stations/{id}/prediction', [RiskAssessmentController::class, 'predict']);
+    Route::post('/assessments', [RiskAssessmentController::class, 'assess']);
 
     // AirSense — admin logs
-    Route::get('/admin/readings', [\App\Http\Controllers\API\AdminLogController::class, 'readings']);
-    Route::get('/admin/assessments', [\App\Http\Controllers\API\AdminLogController::class, 'assessments']);
+    Route::get('/admin/readings', [AdminLogController::class, 'readings']);
+    Route::get('/admin/assessments', [AdminLogController::class, 'assessments']);
 });

@@ -1,0 +1,30 @@
+---
+description: Use the AirSense Postman collection as the API source of truth for this project
+alwaysApply: true
+---
+
+# Postman Collection Reference
+
+When working on API routes, controllers, tests, or any code that defines or documents backend endpoints, always use the **AirSense** Postman collection as the source of truth for endpoint paths, HTTP methods, request payloads, and response shapes.
+
+## Collection Details
+
+- **Name**: AirSense
+- **UID**: `28679971-b6e35892-f2fa-4a2c-bcd8-a095e5233aa3`
+- **Workspace**: My Workspace (`79473e1d-9ddb-4ee2-8be3-e39e7c212ea9`)
+
+## How to Use
+
+When writing or reviewing API-related code, call the Postman MCP to read the collection:
+
+```
+getCollection({ collectionId: "28679971-b6e35892-f2fa-4a2c-bcd8-a095e5233aa3", model: "full" })
+```
+
+## When This Applies
+
+- Adding or modifying API routes in `routes/api.php`
+- Writing or updating API controllers in `app/Http/Controllers/API/`
+- Syncing the collection after new endpoints are added
+- Verifying correct HTTP methods, auth requirements, or response structures
+- Writing feature tests that cover API endpoints

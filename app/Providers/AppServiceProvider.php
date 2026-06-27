@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Services\AIRiskService;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Support\ServiceProvider;
 
@@ -22,6 +23,10 @@ class AppServiceProvider extends ServiceProvider
     {
         ResetPassword::createUrlUsing(function (object $notifiable, string $token) {
             return config('app.frontend_url') . "/password-reset/$token?email={$notifiable->getEmailForPasswordReset()}";
+        });
+
+        $this->app->booted(function () {
+            app(AIRiskService::class)->warmup();
         });
     }
 }

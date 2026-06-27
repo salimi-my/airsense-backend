@@ -22,10 +22,11 @@ class AIRiskService
 
     /**
      * @param  array<string, mixed>  $payload
-     * @return array{risk: string, advice: string, precautions: array<int, string>, confidence: float, used_fallback: bool}
+     * @return array{risk?: string, advice?: string, precautions?: array<int, string>, confidence?: float, used_fallback?: bool, error?: string}
      */
     public function classify(array $payload): array
     {
+        // Dev-only fallback when AI service URL is not configured.
         if (empty($this->baseUrl)) {
             return $this->withFallbackFlag(
                 AQIHelper::fallbackAdvisory(
@@ -37,19 +38,15 @@ class AIRiskService
         }
 
         try {
-            $response = $this->client->post($this->baseUrl . '/assess', [
-                'json' => [
-                    'station_id' => (string) ($payload['station_id'] ?? ''),
-                    'aqi' => (int) $payload['aqi'],
-                    'pm25' => (float) ($payload['pm25'] ?? 0),
-                    'pm10' => (float) ($payload['pm10'] ?? 0),
-                    'age_group' => $payload['age_group'],
-                    'conditions' => $payload['conditions'],
-                    'activity' => $payload['activity'],
-                ],
+            $response = $this->client->post($this->baseUrl . '/predict', [
+                'json' => $this->mapToPredictPayload($payload),
                 'timeout' => config('airsense.ai_service.timeout', 15),
                 'headers' => ['Content-Type' => 'application/json'],
             ]);
+
+            if ($response->getStatusCode() === 503) {
+                return ['error' => 'AI service temporarily unavailable'];
+            }
 
             $body = json_decode($response->getBody()->getContents(), true);
 
@@ -60,21 +57,62 @@ class AIRiskService
             return [
                 'risk' => $body['risk'],
                 'advice' => $body['advice'] ?? '',
-                'precautions' => $body['precautions'] ?? [],
+                'precautions' => $this->precautionsForRisk($body['risk']),
                 'confidence' => (float) ($body['confidence'] ?? 0),
                 'used_fallback' => false,
             ];
         } catch (GuzzleException | AIServiceException $e) {
             Log::warning('AI classify service unavailable', ['error' => $e->getMessage()]);
 
-            return $this->withFallbackFlag(
-                AQIHelper::fallbackAdvisory(
-                    (int) $payload['aqi'],
-                    $payload['age_group'] ?? 'adult',
-                    $payload['conditions'] ?? ['none']
-                )
-            );
+            return ['error' => 'AI service temporarily unavailable'];
         }
+    }
+
+    /**
+     * @param  array<string, mixed>  $payload
+     * @return array<string, mixed>
+     */
+    private function mapToPredictPayload(array $payload): array
+    {
+        $conditions = $payload['conditions'] ?? ['none'];
+        $primary = collect($conditions)->first(fn ($condition) => $condition !== 'none') ?? 'none';
+
+        $conditionMap = [
+            'none' => 'none',
+            'asthma' => 'asthma',
+            'heart_disease' => 'heart',
+            'respiratory' => 'copd',
+            'diabetes' => 'none',
+        ];
+
+        $activityMap = [
+            'indoor' => 'rest',
+            'light_outdoor' => 'light',
+            'moderate_exercise' => 'moderate',
+            'strenuous_exercise' => 'outdoor_exercise',
+        ];
+
+        return [
+            'aqi' => (int) $payload['aqi'],
+            'pm25' => (float) ($payload['pm25'] ?? 0),
+            'age_group' => $payload['age_group'],
+            'condition' => $conditionMap[$primary] ?? 'none',
+            'activity' => $activityMap[$payload['activity'] ?? 'light_outdoor'] ?? 'light',
+        ];
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function precautionsForRisk(string $risk): array
+    {
+        return match ($risk) {
+            'Low' => ['No special precautions needed', 'Stay hydrated', 'Monitor local air quality updates'],
+            'Moderate' => ['Limit strenuous outdoor activity', 'Sensitive groups should take extra care', 'Check updates before outdoor plans'],
+            'High' => ['Wear N95 mask outdoors', 'Reduce outdoor exposure', 'Keep windows closed'],
+            'Critical' => ['Stay indoors', 'Use air purification if available', 'Seek medical advice if symptomatic'],
+            default => [],
+        };
     }
 
     /**
@@ -159,11 +197,17 @@ class AIRiskService
         }
 
         try {
-            $this->client->get($this->baseUrl . '/health', [
+            $this->client->get($this->baseUrl . '/warmup', [
                 'timeout' => 30,
             ]);
         } catch (GuzzleException $e) {
-            Log::info('AI warmup request failed', ['error' => $e->getMessage()]);
+            try {
+                $this->client->get($this->baseUrl . '/health', [
+                    'timeout' => 30,
+                ]);
+            } catch (GuzzleException $healthException) {
+                Log::info('AI warmup request failed', ['error' => $healthException->getMessage()]);
+            }
         }
     }
 

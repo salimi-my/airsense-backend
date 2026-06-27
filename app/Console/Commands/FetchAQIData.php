@@ -35,10 +35,13 @@ class FetchAQIData extends Command
                 continue;
             }
 
-            Reading::query()->create([
-                'station_id' => $station->id,
-                ...$parsed,
-            ]);
+            Reading::query()->updateOrCreate(
+                [
+                    'station_id' => $station->id,
+                    'fetched_at' => $parsed['fetched_at'],
+                ],
+                $parsed,
+            );
 
             $this->info("Updated {$station->name} — AQI {$parsed['aqi']}");
         }

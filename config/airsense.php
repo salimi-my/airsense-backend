@@ -8,7 +8,7 @@ return [
     ],
 
     'ai_service' => [
-        'url' => rtrim(env('AI_SERVICE_URL', ''), '/'),
+        'url' => rtrim(env('AI_SERVICE_URL', env('AI_SERVICE_ENDPOINT', '')), '/'),
         'timeout' => 15,
     ],
 

@@ -41,6 +41,10 @@ class RiskAssessmentController extends AppBaseController
             'activity' => $validated['activity'],
         ]);
 
+        if (isset($aiResult['error'])) {
+            return $this->sendError($aiResult['error'], 503);
+        }
+
         $assessment = Assessment::query()->create([
             'user_id' => auth()->id(),
             'station_id' => $station->id,

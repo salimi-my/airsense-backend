@@ -18,10 +18,10 @@
         "pragmarx/google2fa-laravel": "^3.0",
         "pragmarx/recovery": "^0.2.1",
         "resend/resend-laravel": "^1.4",
-        "smarttechtank/larastarter": "^1.9"
+        "smarttechtank/larastarter": "^1.9",
+        "fakerphp/faker": "^1.23"
     },
     "require-dev": {
-        "fakerphp/faker": "^1.23",
         "laravel/boost": "^2.2",
         "laravel/pail": "^1.2.5",
         "laravel/pao": "^1.0.6",
